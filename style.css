@@ -1,0 +1,97 @@
+/* INVENTORY SCANNER – giao diện tối, mobile first */
+:root {
+  --bg: #0f1115; --card: #1a1d24; --line: #2a2f39; --text: #e8eaee;
+  --muted: #8b93a1; --ok: #22c55e; --danger: #ef4444; --accent: #3b82f6;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+[hidden] { display: none !important; }
+main { max-width: 640px; margin: 0 auto; padding: 8px 12px 40px; display: grid; gap: 12px; }
+
+/* Header */
+.header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; max-width: 640px; margin: 0 auto; }
+.header h1 { font-size: 16px; margin: 0; letter-spacing: .5px; flex: 1; }
+.badge { font-size: 12px; padding: 4px 8px; border-radius: 99px; background: var(--card); color: var(--muted); }
+.badge.on { color: var(--ok); }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--card); color: var(--text); font-size: 20px; cursor: pointer; }
+
+/* Camera */
+.camera { position: relative; width: 100%; aspect-ratio: 3 / 4; max-height: 58vh; background: #000;
+  border-radius: 16px; overflow: hidden; }
+.camera video { width: 100%; height: 100%; object-fit: cover; }
+.frame { position: absolute; inset: 18% 10%; border: 2px solid rgba(34,197,94,.85); border-radius: 14px;
+  pointer-events: none; }
+.laser { position: absolute; left: 4%; right: 4%; height: 2px; background: var(--danger);
+  box-shadow: 0 0 8px var(--danger); animation: scan 2s ease-in-out infinite alternate; opacity: 0; }
+.camera.active .laser { opacity: 1; }
+.camera.paused .laser { animation-play-state: paused; opacity: .3; }
+@keyframes scan { from { top: 6%; } to { top: 94%; } }
+.cam-tools { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 8px; }
+.cam-tools .icon-btn { background: rgba(0,0,0,.55); }
+.cam-tools .icon-btn.on { background: #eab308; color: #000; }
+.flash { position: absolute; inset: 0; background: var(--ok); opacity: 0; pointer-events: none; transition: opacity .25s; }
+.flash.show { opacity: .35; transition: none; }
+
+/* Lỗi */
+.error { display: flex; align-items: center; gap: 8px; justify-content: space-between;
+  background: #3b1519; border: 1px solid var(--danger); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+
+/* Kết quả */
+.result { background: var(--card); border-radius: 12px; padding: 12px; }
+.result-label { color: var(--muted); font-size: 13px; }
+.result-code { font-size: 22px; font-weight: 700; word-break: break-all; min-height: 30px; }
+.result.ok .result-code { color: var(--ok); }
+
+/* Nút */
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn { min-height: 52px; border-radius: 12px; border: 1px solid var(--line); background: var(--card);
+  color: var(--text); font-weight: 700; font-size: 14px; cursor: pointer; padding: 0 12px; }
+.btn.primary { background: var(--ok); color: #04130a; border-color: var(--ok); grid-column: 1 / -1; min-height: 60px; font-size: 16px; }
+.btn.danger { border-color: var(--danger); color: var(--danger); }
+.btn.small { min-height: 40px; font-size: 12px; }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* Thống kê */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.stats div { background: var(--card); border-radius: 12px; padding: 10px; }
+.stats b { display: block; font-size: 22px; }
+.stats small { color: var(--muted); }
+
+/* Input đích + log */
+.target, .batch, .history { background: var(--card); border-radius: 12px; padding: 12px; }
+.target label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+input[type=text], input[type=number], select { width: 100%; min-height: 44px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--text); padding: 0 10px; font-size: 16px; }
+.log { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13px; color: var(--muted); max-height: 110px; overflow: auto; }
+.log li::before { content: "↵ "; color: var(--ok); }
+
+/* Lịch sử */
+.history-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+h2 { font-size: 15px; margin: 0; }
+.row { display: flex; gap: 8px; }
+#historyList { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+#historyList li { display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg); border-radius: 10px; }
+#historyList .meta { flex: 1; min-width: 0; }
+#historyList .code { font-weight: 700; word-break: break-all; }
+#historyList .sub { font-size: 12px; color: var(--muted); }
+#historyList button { min-height: 40px; min-width: 64px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; }
+.empty { color: var(--muted); font-size: 14px; }
+
+/* Toast */
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: #000; color: #fff; padding: 10px 16px; border-radius: 99px; font-size: 14px; z-index: 20;
+  border: 1px solid var(--line); max-width: 90vw; text-align: center; }
+
+/* Settings */
+.panel { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 10; overflow-y: auto; }
+.panel-box { background: var(--card); max-width: 520px; margin: 0 auto; min-height: 100%; padding: 16px; display: grid; gap: 12px; align-content: start; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; }
+.panel label { display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+.panel label.check { display: flex; align-items: center; gap: 10px; color: var(--text); min-height: 40px; }
+.panel input[type=checkbox] { width: 22px; height: 22px; }
+fieldset { border: 1px solid var(--line); border-radius: 10px; }
+.formats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.formats label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); min-height: 36px; }

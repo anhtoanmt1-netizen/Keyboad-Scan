@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1115">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Inventory Scanner</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- A. HEADER -->
+  <header class="header">
+    <h1>INVENTORY SCANNER</h1>
+    <span id="camStatus" class="badge">Camera: tắt</span>
+    <button id="btnSettings" class="icon-btn" aria-label="Cài đặt">⚙</button>
+  </header>
+
+  <main>
+    <!-- B. KHU VỰC CAMERA -->
+    <section class="camera">
+      <video id="video" playsinline muted></video>
+      <div class="frame"><span class="laser"></span></div>
+      <div class="cam-tools">
+        <button id="btnFlip" class="icon-btn" aria-label="Đổi camera">⟲</button>
+        <button id="btnTorch" class="icon-btn" aria-label="Đèn flash" hidden>🔦</button>
+      </div>
+      <div id="flash" class="flash"></div>
+    </section>
+
+    <!-- Banner lỗi + nút thử lại -->
+    <div id="errorBox" class="error" hidden>
+      <span id="errorText"></span>
+      <button id="btnRetry" class="btn small">THỬ LẠI</button>
+    </div>
+
+    <!-- C. KẾT QUẢ SCAN -->
+    <section class="result">
+      <div class="result-label" id="resultMeta">Chưa có mã nào</div>
+      <div class="result-code" id="resultCode">—</div>
+    </section>
+
+    <!-- D. NÚT CHỨC NĂNG -->
+    <section class="controls">
+      <button id="btnStart" class="btn primary">START SCAN</button>
+      <button id="btnPause" class="btn" disabled>PAUSE SCAN</button>
+      <button id="btnResume" class="btn" disabled>RESUME SCAN</button>
+      <button id="btnStop" class="btn danger" disabled>STOP SCAN</button>
+    </section>
+
+    <!-- E. THỐNG KÊ -->
+    <section class="stats">
+      <div><b id="stTotal">0</b><small>Tổng</small></div>
+      <div><b id="stOk">0</b><small>Thành công</small></div>
+      <div><b id="stErr">0</b><small>Lỗi</small></div>
+    </section>
+
+    <!-- MODE B: input đích tích hợp (kiểm thử Enter) -->
+    <section class="target">
+      <label for="targetInput">Ô nhập liệu tích hợp (MODE B)</label>
+      <input id="targetInput" type="text" inputmode="none" autocomplete="off" placeholder="Mã sẽ được gửi vào đây">
+      <ul id="targetLog" class="log"></ul>
+    </section>
+
+    <!-- BATCH -->
+    <section class="batch" id="batchBox" hidden>
+      <h2>Danh sách BATCH (<span id="batchCount">0</span>)</h2>
+      <div class="row">
+        <button id="btnBatchCopy" class="btn small">COPY LÔ</button>
+        <button id="btnBatchClear" class="btn small danger">XÓA LÔ</button>
+      </div>
+    </section>
+
+    <!-- F. LỊCH SỬ -->
+    <section class="history">
+      <div class="history-head">
+        <h2>Lịch sử</h2>
+        <div class="row">
+          <button id="btnExport" class="btn small">XUẤT .TXT</button>
+          <button id="btnClear" class="btn small danger">CLEAR HISTORY</button>
+        </div>
+      </div>
+      <ul id="historyList"></ul>
+    </section>
+  </main>
+
+  <!-- Thông báo nhanh -->
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- SETTINGS -->
+  <div id="settings" class="panel" hidden>
+    <div class="panel-box">
+      <div class="panel-head"><h2>Cài đặt</h2><button id="btnCloseSettings" class="icon-btn">✕</button></div>
+
+      <label>Camera
+        <select id="setCamera"><option value="">Tự động (camera sau)</option></select>
+      </label>
+
+      <label>Chế độ xuất dữ liệu
+        <select id="setOutput">
+          <option value="raw">RAW CODE – chỉ mã</option>
+          <option value="enter">CODE + ENTER</option>
+          <option value="tab">CODE + TAB</option>
+          <option value="clipboard">CLIPBOARD</option>
+          <option value="batch">BATCH</option>
+        </select>
+      </label>
+
+      <label>Chống quét trùng (ms)
+        <input id="setDebounce" type="number" min="200" max="10000" step="100">
+      </label>
+
+      <label>Input đích (CSS selector)
+        <input id="setTarget" type="text" placeholder="#targetInput">
+      </label>
+
+      <label class="check"><input id="setSound" type="checkbox"> Âm thanh</label>
+      <label class="check"><input id="setVibrate" type="checkbox"> Rung</label>
+      <label class="check"><input id="setAutoResume" type="checkbox"> Tự động tiếp tục scan</label>
+      <label class="check"><input id="setAutoSave" type="checkbox"> Tự động lưu lịch sử</label>
+
+      <fieldset>
+        <legend>Loại mã được phép quét</legend>
+        <div id="formatList" class="formats"></div>
+      </fieldset>
+
+      <button id="btnWipe" class="btn danger">XÓA TOÀN BỘ LỊCH SỬ</button>
+    </div>
+  </div>
+
+  <!-- Thư viện nhận diện (đã ghim phiên bản). zxing/browser cần zxing/library nạp trước. -->
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
